@@ -19,12 +19,50 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     fullName: '',
     location: ''
   });
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/auth/confirm?type=recovery`
+      });
+
+      if (error) throw error;
+
+      setResetEmailSent(true);
+      toast({
+        title: "Reset Email Sent",
+        description: "Check your inbox for the password reset link."
+      });
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Reset Failed",
+        description: error.message || "Failed to send reset email. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
@@ -196,7 +234,7 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
       <CardHeader className="space-y-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl font-bold">
-            {emailSent ? 'Check Your Email' : (isSignUp ? 'Create Account' : 'Welcome Back')}
+            {resetEmailSent ? 'Check Your Email' : showForgotPassword ? 'Reset Password' : emailSent ? 'Check Your Email' : (isSignUp ? 'Create Account' : 'Welcome Back')}
           </CardTitle>
           {onBack && (
             <Button variant="ghost" size="sm" onClick={onBack}>
@@ -208,7 +246,71 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
       </CardHeader>
       
       <CardContent>
-        {emailSent ? (
+        {resetEmailSent ? (
+          <div className="space-y-6 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <Mail className="w-8 h-8 text-green-600" />
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Password Reset Email Sent</h3>
+              <p className="text-muted-foreground">
+                We've sent a password reset link to <strong>{formData.email}</strong>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Please check your inbox (and spam folder) and click the link to reset your password.
+              </p>
+            </div>
+
+            <Button
+              onClick={() => {
+                setResetEmailSent(false);
+                setShowForgotPassword(false);
+              }}
+              variant="outline"
+              className="w-full"
+            >
+              Back to Sign In
+            </Button>
+          </div>
+        ) : showForgotPassword ? (
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="text-center mb-4">
+              <p className="text-muted-foreground text-sm">
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Sending..." : "Send Reset Link"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowForgotPassword(false)}
+              className="w-full"
+            >
+              Back to Sign In
+            </Button>
+          </form>
+        ) : emailSent ? (
           <div className="space-y-6 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <Mail className="w-8 h-8 text-green-600" />
@@ -264,7 +366,18 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
               <div className="relative">
                 <Input
                   id="password"
