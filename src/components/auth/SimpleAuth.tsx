@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Eye, EyeOff, Mail, User, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import googleIcon from "@/assets/google-icon.png";
 
 interface SimpleAuthProps {
   onBack?: () => void;
@@ -15,6 +16,7 @@ interface SimpleAuthProps {
 const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,6 +25,30 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
     fullName: '',
     location: ''
   });
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/confirm`
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      toast({
+        title: "Google Sign-In Failed",
+        description: error.message || "Failed to sign in with Google. Please try again.",
+        variant: "destructive"
+      });
+      setGoogleLoading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -300,6 +326,28 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
 
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Processing..." : (isSignUp ? "Create Account" : "Sign In")}
+            </Button>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            {/* Google Sign In Button */}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={googleLoading}
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-3"
+            >
+              <img src={googleIcon} alt="Google" className="w-5 h-5" />
+              {googleLoading ? "Connecting..." : "Continue with Google"}
             </Button>
 
             <div className="text-center">
