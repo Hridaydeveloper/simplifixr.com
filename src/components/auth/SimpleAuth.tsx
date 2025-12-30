@@ -7,6 +7,7 @@ import { ArrowLeft, Eye, EyeOff, Mail, User, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import googleIcon from "@/assets/google-icon.png";
+import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 
 interface SimpleAuthProps {
   onBack?: () => void;
@@ -21,12 +22,31 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
   const [emailSent, setEmailSent] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     fullName: '',
     location: ''
   });
+
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-email-exists', {
+        body: { email }
+      });
+      
+      if (error) {
+        console.error('Email check error:', error);
+        return false;
+      }
+      
+      return data?.exists || false;
+    } catch (error) {
+      console.error('Email check error:', error);
+      return false;
+    }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +61,21 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
 
     setLoading(true);
     try {
+      // Check if email exists before sending reset link
+      setCheckingEmail(true);
+      const emailExists = await checkEmailExists(formData.email);
+      setCheckingEmail(false);
+
+      if (!emailExists) {
+        toast({
+          title: "Email Not Found",
+          description: "This email does not have an account. Create one first.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
         redirectTo: `${window.location.origin}/auth/confirm?type=recovery`
       });
@@ -61,6 +96,7 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
       });
     } finally {
       setLoading(false);
+      setCheckingEmail(false);
     }
   };
 
@@ -121,6 +157,33 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
             description: "Please fill in all required fields.",
             variant: "destructive"
           });
+          setLoading(false);
+          return;
+        }
+
+        // Validate password length
+        if (formData.password.length < 6) {
+          toast({
+            title: "Weak Password",
+            description: "Password must be at least 6 characters long.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Check if email already exists BEFORE attempting signup
+        setCheckingEmail(true);
+        const emailExists = await checkEmailExists(formData.email);
+        setCheckingEmail(false);
+
+        if (emailExists) {
+          toast({
+            title: "Email Already Exists",
+            description: "This email is already registered. Please try a new one or log in instead.",
+            variant: "destructive"
+          });
+          setLoading(false);
           return;
         }
 
@@ -145,6 +208,7 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
               description: "This email is already registered in our database. Please try with a different one or log in instead.",
               variant: "destructive"
             });
+            setLoading(false);
             return;
           }
           throw error;
@@ -297,8 +361,8 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
               </div>
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Sending..." : "Send Reset Link"}
+            <Button type="submit" disabled={loading || checkingEmail} className="w-full">
+              {checkingEmail ? "Checking email..." : loading ? "Sending..." : "Send Reset Link"}
             </Button>
 
             <Button
@@ -398,6 +462,7 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
+              {isSignUp && <PasswordStrengthIndicator password={formData.password} />}
             </div>
 
             {/* Additional fields for sign up */}
@@ -437,8 +502,8 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
               </>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Processing..." : (isSignUp ? "Create Account" : "Sign In")}
+            <Button type="submit" disabled={loading || checkingEmail} className="w-full">
+              {checkingEmail ? "Checking email..." : loading ? "Processing..." : (isSignUp ? "Create Account" : "Sign In")}
             </Button>
 
             {/* Divider */}
