@@ -16,6 +16,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import HomePageImageManager from '@/components/admin/HomePageImageManager';
+import PopularCategoriesManager from '@/components/admin/PopularCategoriesManager';
+import ServiceSectionsManager from '@/components/admin/ServiceSectionsManager';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -165,12 +167,14 @@ const AdminPanel = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex-wrap">
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="providers">Providers</TabsTrigger>
             <TabsTrigger value="services">Services</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="banners">Banners</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="sections">Service Sections</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
@@ -408,6 +412,14 @@ const AdminPanel = () => {
 
           <TabsContent value="banners" className="space-y-4">
             <HomePageImageManager />
+          </TabsContent>
+
+          <TabsContent value="categories" className="space-y-4">
+            <PopularCategoriesManager />
+          </TabsContent>
+
+          <TabsContent value="sections" className="space-y-4">
+            <ServiceSectionsManager />
           </TabsContent>
         </Tabs>
 

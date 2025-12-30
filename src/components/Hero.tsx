@@ -2,18 +2,21 @@ import { Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import HeroBannerSlider from "./HeroBannerSlider";
+import { popularCategoriesService, PopularCategory } from "@/services/popularCategoriesService";
 
 const Hero = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedService, setSelectedService] = useState("");
+  const [categories, setCategories] = useState<PopularCategory[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Service categories data
-  const serviceCategories = [
+  // Default service categories (fallback)
+  const defaultCategories = [
     { icon: "👩‍💼", name: "Women's Salon & Spa", category: "salon" },
     { icon: "👨‍💼", name: "Men's Salon & Massage", category: "salon" },
     { icon: "❄️", name: "AC & Appliance Repair", category: "repair" },
@@ -23,6 +26,20 @@ const Hero = () => {
     { icon: "🎨", name: "Painting & Waterproofing", category: "painting" },
     { icon: "🏗️", name: "Wall Panels & Woodwork", category: "construction" },
   ];
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await popularCategoriesService.getActiveCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleSearch = () => {
     navigate('/services', {
@@ -42,6 +59,9 @@ const Hero = () => {
       }
     });
   };
+
+  // Use database categories if available, otherwise fallback to defaults
+  const displayCategories = categories.length > 0 ? categories : null;
 
   return (
     <section id="home" className="bg-background">
@@ -93,22 +113,54 @@ const Hero = () => {
               Popular <span className="text-primary">Categories</span>
             </h2>
             
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-              {serviceCategories.map((service, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleCategoryClick(service.category)}
-                  className="group flex flex-col items-center p-4 rounded-xl bg-card border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 card-hover"
-                >
-                  <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
-                    {service.icon}
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+                {[...Array(8)].map((_, index) => (
+                  <div key={index} className="flex flex-col items-center p-4 rounded-xl bg-card border border-border/50 animate-pulse">
+                    <div className="w-12 h-12 bg-muted rounded-lg mb-2" />
+                    <div className="h-3 w-16 bg-muted rounded" />
                   </div>
-                  <span className="text-xs font-medium text-foreground text-center leading-tight">
-                    {service.name}
-                  </span>
-                </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : displayCategories ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+                {displayCategories.map((category, index) => (
+                  <button
+                    key={category.id || index}
+                    onClick={() => handleCategoryClick(category.category_link || category.title)}
+                    className="group flex flex-col items-center p-4 rounded-xl bg-card border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 card-hover"
+                  >
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 mb-2 rounded-lg overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                      <img 
+                        src={category.image_url} 
+                        alt={category.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-xs font-medium text-foreground text-center leading-tight">
+                      {category.title}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+                {defaultCategories.map((service, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleCategoryClick(service.category)}
+                    className="group flex flex-col items-center p-4 rounded-xl bg-card border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 card-hover"
+                  >
+                    <div className="text-2xl sm:text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                      {service.icon}
+                    </div>
+                    <span className="text-xs font-medium text-foreground text-center leading-tight">
+                      {service.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
