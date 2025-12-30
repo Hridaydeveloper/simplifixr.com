@@ -201,6 +201,42 @@ export type Database = {
         }
         Relationships: []
       }
+      popular_categories: {
+        Row: {
+          category_link: string | null
+          created_at: string
+          created_by: string | null
+          display_order: number
+          id: string
+          image_url: string
+          is_active: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_link?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          id?: string
+          image_url: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_link?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -429,6 +465,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_sections: {
+        Row: {
+          category_link: string | null
+          created_at: string
+          created_by: string | null
+          display_order: number
+          gradient: string | null
+          icon_color: string | null
+          id: string
+          image_url: string
+          is_active: boolean
+          sub_points: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_link?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          gradient?: string | null
+          icon_color?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean
+          sub_points?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_link?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          gradient?: string | null
+          icon_color?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          sub_points?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import googleIcon from "@/assets/google-icon.png";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
-
+import { EmailValidator } from "./EmailValidator";
 interface SimpleAuthProps {
   onBack?: () => void;
   onSuccess: (role: 'customer' | 'provider') => void;
@@ -426,6 +426,7 @@ const SimpleAuth = ({ onBack, onSuccess }: SimpleAuthProps) => {
                   required
                 />
               </div>
+              <EmailValidator email={formData.email} />
             </div>
 
             {/* Password */}
