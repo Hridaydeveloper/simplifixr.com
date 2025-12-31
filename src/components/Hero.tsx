@@ -52,12 +52,7 @@ const Hero = () => {
   };
 
   const handleCategoryClick = (category: string) => {
-    navigate('/services', {
-      state: {
-        searchQuery: category,
-        scrollToTop: true
-      }
-    });
+    navigate(`/services?category=${encodeURIComponent(category)}`);
   };
 
   // Use database categories if available, otherwise fallback to defaults
@@ -114,47 +109,47 @@ const Hero = () => {
             </h2>
             
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-                {[...Array(8)].map((_, index) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
+                {[...Array(6)].map((_, index) => (
                   <div key={index} className="flex flex-col items-center animate-pulse">
-                    <div className="w-full aspect-square bg-muted rounded-xl mb-2" />
-                    <div className="h-3 w-16 bg-muted rounded" />
+                    <div className="w-full aspect-square bg-muted rounded-2xl mb-3" />
+                    <div className="h-4 w-20 bg-muted rounded" />
                   </div>
                 ))}
               </div>
             ) : displayCategories ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
                 {displayCategories.map((category, index) => (
                   <button
                     key={category.id || index}
                     onClick={() => handleCategoryClick(category.category_link || category.title)}
                     className="group flex flex-col items-center transition-all duration-300"
                   >
-                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-secondary/30 dark:bg-secondary/50 group-hover:shadow-lg group-hover:scale-105 transition-all duration-300 border border-border/30 group-hover:border-primary/50">
+                    <div className="w-full aspect-square rounded-2xl overflow-hidden bg-secondary/30 dark:bg-secondary/50 group-hover:shadow-xl group-hover:scale-105 transition-all duration-300 border border-border/30 group-hover:border-primary/50">
                       <img 
                         src={category.image_url} 
                         alt={category.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <span className="mt-2 text-xs sm:text-sm font-medium text-foreground dark:text-foreground text-center leading-tight group-hover:text-primary transition-colors">
+                    <span className="mt-3 text-sm sm:text-base font-semibold text-foreground dark:text-foreground text-center leading-tight group-hover:text-primary transition-colors">
                       {category.title}
                     </span>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
                 {defaultCategories.map((service, index) => (
                   <button
                     key={index}
                     onClick={() => handleCategoryClick(service.category)}
                     className="group flex flex-col items-center transition-all duration-300"
                   >
-                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-secondary/30 dark:bg-secondary/50 flex items-center justify-center group-hover:shadow-lg group-hover:scale-105 transition-all duration-300 border border-border/30 group-hover:border-primary/50">
-                      <span className="text-4xl sm:text-5xl">{service.icon}</span>
+                    <div className="w-full aspect-square rounded-2xl overflow-hidden bg-secondary/30 dark:bg-secondary/50 flex items-center justify-center group-hover:shadow-xl group-hover:scale-105 transition-all duration-300 border border-border/30 group-hover:border-primary/50">
+                      <span className="text-5xl sm:text-6xl">{service.icon}</span>
                     </div>
-                    <span className="mt-2 text-xs sm:text-sm font-medium text-foreground dark:text-foreground text-center leading-tight group-hover:text-primary transition-colors">
+                    <span className="mt-3 text-sm sm:text-base font-semibold text-foreground dark:text-foreground text-center leading-tight group-hover:text-primary transition-colors">
                       {service.name}
                     </span>
                   </button>
