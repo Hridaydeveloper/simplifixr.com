@@ -114,8 +114,13 @@ const ServicesGrid = () => {
     setHoveredCategory(null);
   };
   
-  const handleServiceClick = () => {
-    navigate('/services');
+  const handleServiceClick = (category?: string) => {
+    navigate('/services', {
+      state: {
+        searchQuery: category || '',
+        scrollToTop: true
+      }
+    });
   };
 
   // Use database sections if available, otherwise fallback to defaults
@@ -146,153 +151,148 @@ const ServicesGrid = () => {
 
         {/* Services Grid */}
         {sectionsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, index) => (
-              <Card key={index} className="bg-card border-border/50 animate-pulse">
-                <CardContent className="p-6 sm:p-8">
-                  <div className="w-14 h-14 rounded-2xl bg-muted mb-5" />
-                  <div className="h-5 w-32 bg-muted rounded mb-2" />
-                  <div className="h-4 w-48 bg-muted rounded" />
-                </CardContent>
-              </Card>
+              <div key={index} className="flex flex-col items-center animate-pulse">
+                <div className="w-full aspect-[4/3] bg-muted rounded-xl mb-3" />
+                <div className="h-4 w-24 bg-muted rounded" />
+              </div>
             ))}
           </div>
         ) : displaySections ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 relative">
             {displaySections.map((section, index) => (
-              <Card 
+              <div 
                 key={section.id || index} 
-                className="group relative bg-card border-border/50 hover:border-primary/30 transition-all duration-500 cursor-pointer overflow-hidden card-hover" 
-                onClick={handleServiceClick}
+                className="group flex flex-col cursor-pointer"
+                onClick={() => handleServiceClick(section.category_link || section.title)}
                 onMouseEnter={() => handleServiceHover(section.category_link || section.title)}
                 onMouseLeave={handleServiceLeave}
               >
-                {/* Gradient Background */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${section.gradient || 'from-primary/20 to-accent/20'} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                {/* Image Card */}
+                <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-secondary/30 dark:bg-secondary/50 group-hover:shadow-xl group-hover:scale-[1.02] transition-all duration-300 border border-border/30 group-hover:border-primary/50">
+                  <img 
+                    src={section.image_url} 
+                    alt={section.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
                 
-                <CardContent className="relative p-6 sm:p-8">
-                  {/* Image Icon */}
-                  <div className={`w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br ${section.gradient || 'from-primary/20 to-accent/20'} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
-                    <img 
-                      src={section.image_url} 
-                      alt={section.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  {/* Content */}
-                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {section.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {section.sub_points.length > 0 ? section.sub_points.join(', ') : 'Professional service available'}
+                {/* Title below card */}
+                <h3 className="mt-3 text-sm sm:text-base font-semibold text-foreground dark:text-foreground text-center group-hover:text-primary transition-colors">
+                  {section.title}
+                </h3>
+                
+                {/* Sub points */}
+                {section.sub_points.length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground text-center line-clamp-1">
+                    {section.sub_points.join(' • ')}
                   </p>
-                  
-                  {/* Hover popup for category services */}
-                  {hoveredCategory === (section.category_link || section.title) && (
-                    <div className="absolute top-full left-0 mt-2 w-80 bg-card shadow-2xl rounded-2xl border border-border p-5 z-50 glow-effect animate-fade-in">
-                      <h4 className="font-display font-semibold text-foreground mb-4">{section.title}</h4>
-                      {loading ? (
-                        <div className="flex items-center justify-center py-6">
-                          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        </div>
-                      ) : categoryServices[section.category_link || section.title]?.length > 0 ? (
-                        <div className="space-y-3 max-h-48 overflow-y-auto">
-                          {categoryServices[section.category_link || section.title].slice(0, 5).map((providerService, idx) => (
-                            <div key={idx} className="p-3 hover:bg-secondary/50 rounded-xl border-l-2 border-primary transition-colors">
-                              <div className="font-medium text-sm text-foreground">
-                                {providerService.master_service?.name || providerService.custom_service_name}
-                              </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {providerService.description || 'Professional service available'}
-                              </div>
-                              <div className="text-xs text-primary font-semibold mt-1">
-                                ₹{providerService.price_range} • {providerService.estimated_time}
-                              </div>
+                )}
+                
+                {/* Hover popup for category services */}
+                {hoveredCategory === (section.category_link || section.title) && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-80 bg-card shadow-2xl rounded-2xl border border-border p-5 z-50 glow-effect animate-fade-in">
+                    <h4 className="font-display font-semibold text-foreground mb-4">{section.title}</h4>
+                    {loading ? (
+                      <div className="flex items-center justify-center py-6">
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : categoryServices[section.category_link || section.title]?.length > 0 ? (
+                      <div className="space-y-3 max-h-48 overflow-y-auto">
+                        {categoryServices[section.category_link || section.title].slice(0, 5).map((providerService, idx) => (
+                          <div key={idx} className="p-3 hover:bg-secondary/50 rounded-xl border-l-2 border-primary transition-colors">
+                            <div className="font-medium text-sm text-foreground">
+                              {providerService.master_service?.name || providerService.custom_service_name}
                             </div>
-                          ))}
-                          {categoryServices[section.category_link || section.title].length > 5 && (
-                            <div className="text-xs text-muted-foreground text-center pt-2">
-                              +{categoryServices[section.category_link || section.title].length - 5} more services
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {providerService.description || 'Professional service available'}
                             </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground py-4 text-center">
-                          No services available yet
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                            <div className="text-xs text-primary font-semibold mt-1">
+                              ₹{providerService.price_range} • {providerService.estimated_time}
+                            </div>
+                          </div>
+                        ))}
+                        {categoryServices[section.category_link || section.title].length > 5 && (
+                          <div className="text-xs text-muted-foreground text-center pt-2">
+                            +{categoryServices[section.category_link || section.title].length - 5} more services
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground py-4 text-center">
+                        No services available yet
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 relative">
             {defaultServices.map((service, index) => (
-              <Card 
+              <div 
                 key={index} 
-                className="group relative bg-card border-border/50 hover:border-primary/30 transition-all duration-500 cursor-pointer overflow-hidden card-hover" 
-                onClick={handleServiceClick}
+                className="group flex flex-col cursor-pointer"
+                onClick={() => handleServiceClick(service.category)}
                 onMouseEnter={() => handleServiceHover(service.category)}
                 onMouseLeave={handleServiceLeave}
               >
-                {/* Gradient Background */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                {/* Image Card with gradient background */}
+                <div className={`relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-br ${service.gradient} group-hover:shadow-xl group-hover:scale-[1.02] transition-all duration-300 border border-border/30 group-hover:border-primary/50 flex items-center justify-center`}>
+                  <span className="text-5xl sm:text-6xl">{service.title.charAt(0)}</span>
+                </div>
                 
-                <CardContent className="relative p-6 sm:p-8">
-                  {/* Icon */}
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.gradient} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
-                    <span className="text-2xl">{service.title.charAt(0)}</span>
+                {/* Title below card */}
+                <h3 className="mt-3 text-sm sm:text-base font-semibold text-foreground dark:text-foreground text-center group-hover:text-primary transition-colors">
+                  {service.title}
+                </h3>
+                
+                {/* Description */}
+                <p className="mt-1 text-xs text-muted-foreground text-center line-clamp-1">
+                  {service.description}
+                </p>
+                
+                {/* Hover popup for category services */}
+                {hoveredCategory === service.category && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-80 bg-card shadow-2xl rounded-2xl border border-border p-5 z-50 glow-effect animate-fade-in">
+                    <h4 className="font-display font-semibold text-foreground mb-4">{service.title}</h4>
+                    {loading ? (
+                      <div className="flex items-center justify-center py-6">
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : categoryServices[service.category]?.length > 0 ? (
+                      <div className="space-y-3 max-h-48 overflow-y-auto">
+                        {categoryServices[service.category].slice(0, 5).map((providerService, idx) => (
+                          <div key={idx} className="p-3 hover:bg-secondary/50 rounded-xl border-l-2 border-primary transition-colors">
+                            <div className="font-medium text-sm text-foreground">
+                              {providerService.master_service?.name || providerService.custom_service_name}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {providerService.description || 'Professional service available'}
+                            </div>
+                            <div className="text-xs text-primary font-semibold mt-1">
+                              ₹{providerService.price_range} • {providerService.estimated_time}
+                            </div>
+                          </div>
+                        ))}
+                        {categoryServices[service.category].length > 5 && (
+                          <div className="text-xs text-muted-foreground text-center pt-2">
+                            +{categoryServices[service.category].length - 5} more services
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground py-4 text-center">
+                        No services available yet
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Content */}
-                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                    {service.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {service.description}
-                  </p>
-                  
-                  {/* Hover popup for category services */}
-                  {hoveredCategory === service.category && (
-                    <div className="absolute top-full left-0 mt-2 w-80 bg-card shadow-2xl rounded-2xl border border-border p-5 z-50 glow-effect animate-fade-in">
-                      <h4 className="font-display font-semibold text-foreground mb-4">{service.title}</h4>
-                      {loading ? (
-                        <div className="flex items-center justify-center py-6">
-                          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        </div>
-                      ) : categoryServices[service.category]?.length > 0 ? (
-                        <div className="space-y-3 max-h-48 overflow-y-auto">
-                          {categoryServices[service.category].slice(0, 5).map((providerService, idx) => (
-                            <div key={idx} className="p-3 hover:bg-secondary/50 rounded-xl border-l-2 border-primary transition-colors">
-                              <div className="font-medium text-sm text-foreground">
-                                {providerService.master_service?.name || providerService.custom_service_name}
-                              </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {providerService.description || 'Professional service available'}
-                              </div>
-                              <div className="text-xs text-primary font-semibold mt-1">
-                                ₹{providerService.price_range} • {providerService.estimated_time}
-                              </div>
-                            </div>
-                          ))}
-                          {categoryServices[service.category].length > 5 && (
-                            <div className="text-xs text-muted-foreground text-center pt-2">
-                              +{categoryServices[service.category].length - 5} more services
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground py-4 text-center">
-                          No services available yet
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                )}
+              </div>
             ))}
           </div>
         )}
@@ -300,7 +300,7 @@ const ServicesGrid = () => {
         {/* View All Button */}
         <div className="text-center mt-12">
           <Button 
-            onClick={handleServiceClick}
+            onClick={() => handleServiceClick()}
             variant="outline"
             size="lg"
             className="px-8 py-6 text-base font-semibold rounded-xl border-2 border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 group"
