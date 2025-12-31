@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Services = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -24,6 +25,14 @@ const Services = () => {
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const isGuest = localStorage.getItem('guestMode') === 'true';
+
+  // Read category from URL params on mount
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchData();
@@ -53,10 +62,18 @@ const Services = () => {
 
   const filteredServices = services.filter(service => {
     const serviceName = service.master_service?.name || service.custom_service_name || '';
+    const serviceCategory = service.master_service?.category || '';
+    
+    // Search filter
     const searchMatch = serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                        service.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return searchMatch;
+    // Category filter - match category name case-insensitively
+    const categoryMatch = !selectedCategory || 
+                         serviceCategory.toLowerCase() === selectedCategory.toLowerCase() ||
+                         serviceCategory.toLowerCase().includes(selectedCategory.toLowerCase());
+    
+    return searchMatch && categoryMatch;
   });
 
   const handleBookService = (service: ProviderService) => {
@@ -144,15 +161,21 @@ const Services = () => {
           <div className="flex flex-wrap gap-2 justify-center">
             <Button
               variant={selectedCategory === "" ? "default" : "outline"}
-              onClick={() => setSelectedCategory("")}
+              onClick={() => {
+                setSelectedCategory("");
+                setSearchParams({});
+              }}
             >
               All Services
             </Button>
             {categories.map((category) => (
               <Button
                 key={category.id}
-                variant={selectedCategory === category.name ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category.name)}
+                variant={selectedCategory.toLowerCase() === category.name.toLowerCase() ? "default" : "outline"}
+                onClick={() => {
+                  setSelectedCategory(category.name);
+                  setSearchParams({ category: category.name });
+                }}
               >
                 {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
               </Button>

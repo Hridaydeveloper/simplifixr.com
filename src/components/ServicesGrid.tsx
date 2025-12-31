@@ -115,12 +115,11 @@ const ServicesGrid = () => {
   };
   
   const handleServiceClick = (category?: string) => {
-    navigate('/services', {
-      state: {
-        searchQuery: category || '',
-        scrollToTop: true
-      }
-    });
+    if (category) {
+      navigate(`/services?category=${encodeURIComponent(category)}`);
+    } else {
+      navigate('/services');
+    }
   };
 
   // Use database sections if available, otherwise fallback to defaults
