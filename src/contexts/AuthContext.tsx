@@ -194,14 +194,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // Clear local state immediately
+      setUser(null);
+      setUserProfile(null);
+      
+      // Clear guest mode on logout
+      localStorage.removeItem('guestMode');
+      
+      // Clear any Supabase auth keys from storage
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) {
         console.error('Sign out error:', error);
       }
-      // Clear guest mode on logout
-      localStorage.removeItem('guestMode');
+      
+      // Force page reload to ensure clean state
+      window.location.href = '/';
     } catch (error) {
       console.error('Error during sign out:', error);
+      // Even on error, redirect to home
+      window.location.href = '/';
     }
   };
 
